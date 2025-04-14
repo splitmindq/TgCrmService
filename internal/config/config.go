@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/go-chi/chi/v5"
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/joho/godotenv"
 	"log"
@@ -55,13 +56,14 @@ func MustLoadConfig() *Config {
 	return &config
 }
 
-func (config *Config) HTTPListen() error {
+func (config *Config) HTTPListen(router chi.Router) error {
 
 	server := http.Server{
 		Addr:         config.HTTPServer.Address,
 		ReadTimeout:  config.HTTPServer.Timeout,
 		WriteTimeout: config.HTTPServer.Timeout,
 		IdleTimeout:  config.HTTPServer.IdleTimeout,
+		Handler:      router,
 	}
 
 	return server.ListenAndServe()

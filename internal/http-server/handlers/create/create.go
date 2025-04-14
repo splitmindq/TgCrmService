@@ -4,33 +4,39 @@ import (
 	"fmt"
 	"lead-bitrix/entities"
 	"lead-bitrix/internal/http-server/handlers"
+	"lead-bitrix/internal/telegram"
 	"log/slog"
 	"net/http"
 )
 
-func NewLead(log *slog.Logger) http.HandlerFunc {
+func NewLead(log *slog.Logger, bot *telegram.Bot) http.HandlerFunc {
 
-	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "handlers.NewLead"
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		log = log.With(
-			slog.String("op:", op),
-		)
+		const op = "Handlers.create.NewLead"
+		log = log.With("handler", op)
 
-		if r.Method != "POST" {
-			log.Error("Invalid method:", r.Method)
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		var lead entities.LeadBitrix
+
+		err := handlers.DecodeAndValidate(w, r, &lead)
+		if err != nil {
+			log.Error(op, "Failed to decode and validate request", err)
 			return
 		}
 
-		var lead entities.LeadBitrix
-		err := handlers.DecodeAndValidate(w, r, &lead, log)
+		leadInfo := fmt.Sprintf("Lead name: %s\nLead Phone: %s\n"+
+			"Lead Email: %s\nLead Source: %s\n", lead.Name, lead.Phone, lead.Email, lead.Source)
+
+		err = bot.SendNotification(leadInfo)
 		if err != nil {
-			log.Error("Ошибка разбора JSON: "+err.Error(), log)
+			log.Error(op, "Failed to send notification", err)
+			return
 		}
 
-		fmt.Println(lead)
-		
-	}
+		//lead -> tg
+		//todo validation
+		//todo bitrix service
+
+	})
 
 }

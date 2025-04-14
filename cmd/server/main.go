@@ -29,18 +29,16 @@ func main() {
 	logger := setupLogger(cfg.Env)
 
 	bot, _ := telegram.NewBot(cfg.TelegramConfig.Token, cfg.TelegramConfig.ChatID, logger)
-
 	go bot.Start()
 
 	router := chi.NewRouter()
-
-	router.Post("/save", create.NewLead(logger))
+	router.Post("/save", create.NewLead(logger, bot))
 
 	//todo init storage
 	//todo init router
 
 	logger.Info("listening server")
-	err := cfg.HTTPListen()
+	err := cfg.HTTPListen(router)
 	if err != nil {
 		log.Fatalf("Could not start server: %v", err)
 	}
