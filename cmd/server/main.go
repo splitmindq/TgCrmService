@@ -38,7 +38,7 @@ func main() {
 	go bot.Start()
 
 	router := chi.NewRouter()
-	router.Post("/save", create.NewLead(logger, bot))
+	router.Post("/save", create.NewLead(logger, bot, storage))
 
 	//todo init storage
 	//todo init router

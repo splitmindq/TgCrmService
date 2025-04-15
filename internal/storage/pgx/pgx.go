@@ -32,6 +32,7 @@ func NewStorage(cfg *config.Config) (*Storage, error) {
 		err = fmt.Errorf("error parsing connection string %s", err.Error())
 		return nil, err
 	}
+
 	poolConfig.MaxConns = 10
 	poolConfig.MinConns = 2
 	poolConfig.MaxConnLifetime = time.Hour
