@@ -23,8 +23,6 @@ const (
 
 func main() {
 
-	//todo init configs (database)
-
 	cfg := config.MustLoadConfig()
 	fmt.Println(cfg)
 
