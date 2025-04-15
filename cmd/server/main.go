@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"lead-bitrix/internal/storage/pgx"
+
 	//"github.com/go-chi/chi/v5/middleware"
 	//"github.com/go-chi/cors"
 	"lead-bitrix/internal/config"
@@ -28,6 +30,12 @@ func main() {
 
 	logger := setupLogger(cfg.Env)
 
+	storage, err := pgx.NewStorage(cfg)
+	if err != nil {
+		logger.Error(err.Error())
+	}
+	defer storage.Close()
+
 	bot, _ := telegram.NewBot(cfg.TelegramConfig.Token, cfg.TelegramConfig.ChatID, logger)
 	go bot.Start()
 
@@ -38,7 +46,7 @@ func main() {
 	//todo init router
 
 	logger.Info("listening server")
-	err := cfg.HTTPListen(router)
+	err = cfg.HTTPListen(router)
 	if err != nil {
 		log.Fatalf("Could not start server: %v", err)
 	}

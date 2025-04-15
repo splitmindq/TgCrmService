@@ -1,8 +1,14 @@
-  env: local
-  http_server:
-    address: localhost:8080
-    timeout: 2s
-    idle_timeout: 60s
-  telegram_config:
-    token: ""
-    chat_id: 0
+env: local
+http_server:
+  address: 0.0.0.0:8080
+  timeout: 2s
+  idle_timeout: 60s
+telegram_config:
+  token: ""
+  chat_id: 0
+db_config:
+  host: ${DB_HOST}
+  port: 5432
+  user: ${DB_USER}
+  password: ${DB_PASSWORD}
+  name: ${DB_NAME}

@@ -11,7 +11,7 @@ import (
 
 func NewLead(log *slog.Logger, bot *telegram.Bot) http.HandlerFunc {
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 
 		const op = "Handlers.create.NewLead"
 		log = log.With("handler", op)
@@ -20,7 +20,7 @@ func NewLead(log *slog.Logger, bot *telegram.Bot) http.HandlerFunc {
 
 		err := handlers.DecodeAndValidate(w, r, &lead)
 		if err != nil {
-			log.Error(op, "Failed to decode and validate request", err)
+			log.Error("Failed to decode and validate request", err)
 			return
 		}
 
@@ -29,14 +29,14 @@ func NewLead(log *slog.Logger, bot *telegram.Bot) http.HandlerFunc {
 
 		err = bot.SendNotification(leadInfo)
 		if err != nil {
-			log.Error(op, "Failed to send notification", err)
+			log.Error("Failed to send notification", err)
+			handlers.RespondError(w, "Failed to send notification", 500)
 			return
 		}
 
-		//lead -> tg
-		//todo validation
+		//todo storage
 		//todo bitrix service
 
-	})
+	}
 
 }
