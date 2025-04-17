@@ -50,7 +50,6 @@ func NewLead(log *slog.Logger, bot *telegram.Bot, storage *pgx.Storage) http.Han
 		err = bot.SendNotification(leadInfo)
 		if err != nil {
 			log.Error("Failed to send notification", err)
-			handlers.RespondError(w, "Failed to send notification", 500)
 		}
 
 		log.Info("lead created successfully")

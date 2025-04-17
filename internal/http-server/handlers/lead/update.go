@@ -47,10 +47,16 @@ func UpdateLead(log *slog.Logger, storage *pgx.Storage) http.HandlerFunc {
 		}
 
 		updateData := entities.LeadBitrix{
-			Phone:  phone,
-			Name:   *req.Name,
-			Email:  *req.Email,
-			Source: *req.Source,
+			Phone: phone,
+		}
+		if req.Name != nil {
+			updateData.Name = *req.Name
+		}
+		if req.Email != nil {
+			updateData.Email = *req.Email
+		}
+		if req.Source != nil {
+			updateData.Source = *req.Source
 		}
 
 		updatedLead, err := storage.UpdateLead(r.Context(), updateData)

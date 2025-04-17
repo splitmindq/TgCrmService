@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"lead-bitrix/internal/http-server/handlers/lead"
 	"lead-bitrix/internal/storage/pgx"
 	//"github.com/go-chi/chi/v5/middleware"
@@ -37,6 +38,8 @@ func main() {
 	go bot.Start()
 
 	router := chi.NewRouter()
+
+	router.Use(middleware.RequestID)
 
 	router.Get("/api/leads", lead.GetLeads(logger, storage))
 	router.Get("/api/leads/{email}", lead.LeadGetByEmail(logger, storage))
