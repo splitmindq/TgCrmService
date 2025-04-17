@@ -2,6 +2,7 @@ package lead
 
 import (
 	"errors"
+	"github.com/go-chi/chi/v5"
 	"lead-bitrix/entities"
 	"lead-bitrix/internal/http-server/handlers"
 	"lead-bitrix/internal/storage/pgx"
@@ -10,7 +11,6 @@ import (
 )
 
 type UpdateLeadRequest struct {
-	Phone  string  `json:"phone" validate:"required"`
 	Name   *string `json:"name,omitempty"`
 	Email  *string `json:"email,omitempty"`
 	Source *string `json:"source,omitempty"`
@@ -24,34 +24,35 @@ func UpdateLead(log *slog.Logger, storage *pgx.Storage) http.HandlerFunc {
 			slog.String("method", r.Method),
 		)
 
-		// 1. Проверка метода
 		if r.Method != http.MethodPatch {
 			handlers.RespondError(w, "Only PATCH method is allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
-		// 2. Декодирование запроса
+		phone := chi.URLParam(r, "phone")
+		if phone == "" {
+			handlers.RespondError(w, "phone is required", http.StatusBadRequest)
+			return
+		}
+
 		var req UpdateLeadRequest
 		if err := handlers.DecodeAndValidate(w, r, &req); err != nil {
 			log.Error("Failed to decode request", "error", err)
 			return
 		}
 
-		// 3. Валидация телефона
-		if req.Phone == "" {
-			handlers.RespondError(w, "Phone is required", http.StatusBadRequest)
+		if req.Name == nil && req.Email == nil && req.Source == nil {
+			handlers.RespondError(w, "At least one field must be provided to update", http.StatusBadRequest)
 			return
 		}
 
-		// 5. Подготовка данных для обновления
 		updateData := entities.LeadBitrix{
-			Phone:  req.Phone,
+			Phone:  phone,
 			Name:   *req.Name,
 			Email:  *req.Email,
 			Source: *req.Source,
 		}
 
-		// 6. Обновление в БД
 		updatedLead, err := storage.UpdateLead(r.Context(), updateData)
 		if err != nil {
 			log.Error("Failed to update lead", "error", err)
@@ -67,7 +68,6 @@ func UpdateLead(log *slog.Logger, storage *pgx.Storage) http.HandlerFunc {
 			return
 		}
 
-		// 7. Успешный ответ
 		handlers.RespondJSON(w, http.StatusOK, map[string]interface{}{
 			"status": "success",
 			"data":   updatedLead,

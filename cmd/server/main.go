@@ -42,8 +42,8 @@ func main() {
 	router.Get("/api/leads/{email}", lead.LeadGetByEmail(logger, storage))
 	router.Post("/api/leads", lead.NewLead(logger, bot, storage))
 	router.Delete("/api/leads/{email}", lead.DelLead(logger, bot, storage))
-	router.Patch("/api/leads", lead.UpdateLead(logger, storage))
-	
+	router.Patch("/api/leads/{phone}", lead.UpdateLead(logger, storage))
+
 	logger.Info("listening server")
 	err = cfg.HTTPListen(router)
 	if err != nil {
