@@ -3,12 +3,11 @@ package main
 import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"lead-bitrix/internal/http-server/handlers/lead"
 	"lead-bitrix/internal/storage/pgx"
-
 	//"github.com/go-chi/chi/v5/middleware"
 	//"github.com/go-chi/cors"
 	"lead-bitrix/internal/config"
-	"lead-bitrix/internal/http-server/handlers/create"
 	"lead-bitrix/internal/telegram"
 	"log"
 	"log/slog"
@@ -38,11 +37,13 @@ func main() {
 	go bot.Start()
 
 	router := chi.NewRouter()
-	router.Post("/save", create.NewLead(logger, bot, storage))
 
-	//todo init storage
-	//todo init router
-
+	router.Get("/api/leads", lead.GetLeads(logger, storage))
+	router.Get("/api/leads/{email}", lead.LeadGetByEmail(logger, storage))
+	router.Post("/api/leads", lead.NewLead(logger, bot, storage))
+	router.Delete("/api/leads/{email}", lead.DelLead(logger, bot, storage))
+	router.Patch("/api/leads", lead.UpdateLead(logger, storage))
+	
 	logger.Info("listening server")
 	err = cfg.HTTPListen(router)
 	if err != nil {
