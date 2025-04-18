@@ -3,6 +3,7 @@ package lead
 import (
 	"fmt"
 	"lead-bitrix/entities"
+	"lead-bitrix/internal/http-server/bitrix"
 	"lead-bitrix/internal/http-server/handlers"
 	"lead-bitrix/internal/storage/pgx"
 	"lead-bitrix/internal/telegram"
@@ -47,6 +48,13 @@ func NewLead(log *slog.Logger, bot *telegram.Bot, storage *pgx.Storage) http.Han
 		leadInfo := fmt.Sprintf("Lead name: %s\nLead Phone: %s\n"+
 			"Lead Email: %s\nLead Source: %s\n", lead.Name, lead.Phone, lead.Email, lead.Source)
 
+		err = bitrix.SendLeadToBitrix(log, lead)
+		if err != nil {
+			log.Error("Failed to send lead to bitrix", err)
+			handlers.RespondError(w, "Failed to send lead to bitrix", http.StatusInternalServerError)
+			return
+		}
+		
 		err = bot.SendNotification(leadInfo)
 		if err != nil {
 			log.Error("Failed to send notification", err)
