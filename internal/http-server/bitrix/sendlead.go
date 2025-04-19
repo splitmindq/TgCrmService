@@ -18,9 +18,9 @@ type leadId struct {
 }
 
 func SendLeadToBitrix(log *slog.Logger, lead entities.JsonForm) (int, error) {
-	urlWH := os.Getenv("BITRIX24_WEBHOOK")
+	urlWH := os.Getenv("BITRIX24ADD_WEBHOOK")
 	if urlWH == "" {
-		return 0, errors.New("BITRIX24_WEBHOOK is not set")
+		return 0, errors.New("BITRIX24ADD_WEBHOOK is not set")
 	}
 
 	data := url.Values{}

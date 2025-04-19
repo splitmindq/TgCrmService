@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"lead-bitrix/internal/http-server/bitrix"
 	"lead-bitrix/internal/http-server/handlers"
 	"lead-bitrix/internal/storage/pgx"
 	"lead-bitrix/internal/telegram"
@@ -45,6 +46,12 @@ func DelLead(log *slog.Logger, bot *telegram.Bot, storage *pgx.Storage) http.Han
 			} else {
 				handlers.RespondError(w, "Failed to get lead", http.StatusInternalServerError)
 			}
+			return
+		}
+
+		err = bitrix.DeleteLead(log, lead)
+		if err != nil {
+			handlers.RespondError(w, "Failed to delete lead", http.StatusInternalServerError)
 			return
 		}
 
