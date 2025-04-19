@@ -25,7 +25,7 @@ func NewLead(log *slog.Logger, bot *telegram.Bot, storage *pgx.Storage) http.Han
 			slog.String("method", r.Method),
 			slog.String("path", r.URL.Path),
 		)
-		var lead entities.LeadBitrix
+		var lead entities.JsonForm
 
 		if r.Method != "POST" {
 			handlers.RespondError(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -38,7 +38,24 @@ func NewLead(log *slog.Logger, bot *telegram.Bot, storage *pgx.Storage) http.Han
 			handlers.RespondError(w, "Invalid request data", http.StatusBadRequest)
 			return
 		}
-		if err = storage.SaveLead(r.Context(), lead); err != nil {
+
+		//LEAD BITRIX -> GET ID -> VAR FORM FOR DB -> SAVE DB -> TG
+
+		var id int
+
+		id, err = bitrix.SendLeadToBitrix(log, lead)
+		if err != nil {
+			log.Error("Failed to send lead to bitrix", err)
+			handlers.RespondError(w, "Failed to send lead to bitrix", http.StatusInternalServerError)
+			return
+		}
+
+		var bitrixLead entities.Lead
+
+		bitrixLead.Form = lead
+		bitrixLead.Id = id
+
+		if err = storage.SaveLead(r.Context(), bitrixLead); err != nil {
 			log.Error("Failed to save lead", err)
 			msg := err.Error()
 			handlers.RespondError(w, msg, 500)
@@ -46,15 +63,8 @@ func NewLead(log *slog.Logger, bot *telegram.Bot, storage *pgx.Storage) http.Han
 		}
 
 		leadInfo := fmt.Sprintf("Lead name: %s\nLead Phone: %s\n"+
-			"Lead Email: %s\nLead Source: %s\n", lead.Name, lead.Phone, lead.Email, lead.Source)
+			"Lead Email: %s\nLead Source: %s\nLead Id: %d\n", lead.Name, lead.Phone, lead.Email, lead.Source, id)
 
-		err = bitrix.SendLeadToBitrix(log, lead)
-		if err != nil {
-			log.Error("Failed to send lead to bitrix", err)
-			handlers.RespondError(w, "Failed to send lead to bitrix", http.StatusInternalServerError)
-			return
-		}
-		
 		err = bot.SendNotification(leadInfo)
 		if err != nil {
 			log.Error("Failed to send notification", err)

@@ -55,7 +55,7 @@ func DelLead(log *slog.Logger, bot *telegram.Bot, storage *pgx.Storage) http.Han
 		}
 
 		leadInfo := fmt.Sprintf("\nLead name: %s\nLead Phone: %s\n"+
-			"Lead Email: %s\nLead Source: %s\n", lead.Name, lead.Phone, lead.Email, lead.Source)
+			"Lead Email: %s\nLead Source: %s\n", lead.Form.Name, lead.Form.Phone, lead.Form.Email, lead.Form.Source)
 
 		err = bot.SendNotification(fmt.Sprintf("Deleted lead: %s", leadInfo))
 		if err != nil {

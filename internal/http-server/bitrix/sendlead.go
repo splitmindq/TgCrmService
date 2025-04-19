@@ -1,6 +1,7 @@
 package bitrix
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -12,10 +13,14 @@ import (
 	"strings"
 )
 
-func SendLeadToBitrix(log *slog.Logger, lead entities.LeadBitrix) error {
+type leadId struct {
+	Result int `json:"result"`
+}
+
+func SendLeadToBitrix(log *slog.Logger, lead entities.JsonForm) (int, error) {
 	urlWH := os.Getenv("BITRIX24_WEBHOOK")
 	if urlWH == "" {
-		return errors.New("BITRIX24_WEBHOOK is not set")
+		return 0, errors.New("BITRIX24_WEBHOOK is not set")
 	}
 
 	data := url.Values{}
@@ -35,15 +40,21 @@ func SendLeadToBitrix(log *slog.Logger, lead entities.LeadBitrix) error {
 	)
 	if err != nil {
 		log.Error("SendLeadToBitrix POST error:", err)
-		return err
+		return 0, err
 	}
 	defer resp.Body.Close()
 
+	body, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
 		log.Error("Bitrix response error", "status", resp.Status, "body", string(body))
-		return fmt.Errorf("bitrix error: %s", resp.Status)
+		return 0, fmt.Errorf("bitrix error: %s", resp.Status)
 	}
 
-	return nil
+	var bitrixId leadId
+
+	if err := json.Unmarshal(body, &bitrixId); err != nil {
+		log.Error("Bitrix response error", "error", err, "body", string(body))
+		return 0, err
+	}
+	return bitrixId.Result, nil
 }
