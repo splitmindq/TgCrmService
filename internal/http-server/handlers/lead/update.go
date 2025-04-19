@@ -24,8 +24,8 @@ func UpdateLead(log *slog.Logger, storage *pgx.Storage) http.HandlerFunc {
 			slog.String("method", r.Method),
 		)
 
-		if r.Method != http.MethodPatch {
-			handlers.RespondError(w, "Only PATCH method is allowed", http.StatusMethodNotAllowed)
+		if r.Method != http.MethodPatch && r.Method != http.MethodPut {
+			handlers.RespondError(w, "Only PATCH or PUT methods are allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
@@ -46,7 +46,7 @@ func UpdateLead(log *slog.Logger, storage *pgx.Storage) http.HandlerFunc {
 			return
 		}
 
-		updateData := entities.LeadBitrix{
+		updateData := entities.JsonForm{
 			Phone: phone,
 		}
 		if req.Name != nil {
@@ -68,15 +68,23 @@ func UpdateLead(log *slog.Logger, storage *pgx.Storage) http.HandlerFunc {
 				handlers.RespondError(w, "Lead not found", http.StatusNotFound)
 			case errors.Is(err, pgx.ErrEmailExists):
 				handlers.RespondError(w, "Email already exists", http.StatusConflict)
+			case errors.Is(err, pgx.ErrPhoneExists):
+				handlers.RespondError(w, "Phone already exists", http.StatusConflict)
 			default:
 				handlers.RespondError(w, "Internal server error", http.StatusInternalServerError)
 			}
 			return
 		}
-
+		
 		handlers.RespondJSON(w, http.StatusOK, map[string]interface{}{
 			"status": "success",
-			"data":   updatedLead,
+			"data": map[string]interface{}{
+				"id":     updatedLead.Id,
+				"name":   updatedLead.Form.Name,
+				"email":  updatedLead.Form.Email,
+				"phone":  updatedLead.Form.Phone,
+				"source": updatedLead.Form.Source,
+			},
 		})
 	}
 }
