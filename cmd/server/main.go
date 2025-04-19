@@ -35,6 +35,7 @@ func main() {
 	defer storage.Close()
 
 	bot, _ := telegram.NewBot(cfg.TelegramConfig.Token, cfg.TelegramConfig.ChatID, logger)
+
 	go bot.Start()
 
 	router := chi.NewRouter()
