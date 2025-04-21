@@ -2,6 +2,7 @@ package bitrix
 
 import (
 	"errors"
+	"io"
 	"lead-bitrix/entities"
 	"log/slog"
 	"net/http"
@@ -30,7 +31,12 @@ func DeleteLead(log *slog.Logger, lead *entities.Lead) error {
 		log.Error("SendLeadToBitrix POST error:", err)
 		return err
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Error("SendLeadToBitrix POST error:", err)
+		}
+	}(resp.Body)
 
 	return nil
 }

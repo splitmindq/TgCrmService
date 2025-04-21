@@ -42,7 +42,13 @@ func SendLeadToBitrix(log *slog.Logger, lead entities.JsonForm) (int, error) {
 		log.Error("SendLeadToBitrix POST error:", err)
 		return 0, err
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			log.Error("SendLeadToBitrix CloseBody error:", err)
+		}
+		
+	}(resp.Body)
 
 	body, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
